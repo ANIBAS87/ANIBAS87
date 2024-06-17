@@ -1,0 +1,35 @@
+﻿' ' '
+import ccxt
+import talib
+
+exchange = ccxt.Binance()
+symbol = 'BTC/USDT'
+timeframe = '1m'
+
+def buy_coin(symbol, exchange):
+    exchange.create_market_buy_order(symbol, 0.001)
+
+def sell_coin(symbol, exchange, buy_price):
+    current_price = exchange.fetch_ticker(symbol)['last']
+    if current_price >= buy_price * 1.02:
+        exchange.create_market_sell_order(symbol, 0.001)
+
+def check_hammer(data):
+    hammer = talib.CANDLEHAMMER(data)
+    return hammer[-1]
+
+data = exchange.fetch_ohlcv(symbol, timeframe)
+if check_hammer(data):
+    buy_price = exchange.fetch_ticker(symbol)['last']
+    buy_coin(symbol, exchange)
+    print(f'Bought 0.001 BTC at {buy_price}')
+    while True:
+        data = exchange.fetch_ohlcv(symbol, timeframe)
+        current_price = exchange.fetch_ticker(symbol)['last']
+        if current_price >= buy_price * 1.02:
+            sell_coin(symbol, exchange, buy_price)
+            print(f'Sold 0.001 BTC at {current_price}')
+            break
+        time.sleep(60)
+```
+
